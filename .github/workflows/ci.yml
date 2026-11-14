@@ -1,4 +1,5 @@
-name: DevOps Academy CI Pipeline
+
+name: DevOps Academy CI-CD Pipeline
 
 on:
   push:
@@ -9,8 +10,12 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  build-and-test:
+  build-test-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,8 +38,12 @@ jobs:
       - name: Build Docker image
         run: docker build -t devops-learning-platform:ci .
 
-      - name: Start Docker container
-        run: docker run -d --name devops-academy-test -p 8080:8080 devops-learning-platform:ci
+      - name: Start test container
+        run: |
+          docker run -d \
+            --name devops-academy-test \
+            -p 8080:8080 \
+            devops-learning-platform:ci
 
       - name: Test application health
         run: |
@@ -50,3 +59,28 @@ jobs:
       - name: Stop test container
         if: always()
         run: docker rm -f devops-academy-test || true
+
+      - name: Configure AWS credentials using OIDC
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image to ECR
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA .
+
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA
