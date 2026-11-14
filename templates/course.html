@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course.name }} | DevOps Academy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">DevOps<span>Academy.</span></div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/#courses">Courses</a>
+            <a href="/#about">About</a>
+        </div>
+        <a href="/#courses" class="nav-button">All Courses</a>
+    </nav>
+
+    <section class="courses">
+        <p class="tagline">YOUR LEARNING JOURNEY</p>
+
+        <div class="course-card" style="max-width: 750px; margin: auto;">
+            <div class="course-icon">{{ course.icon }}</div>
+            <h2>{{ course.name }} Development</h2>
+            <p>{{ course.description }}</p>
+
+            <h3 style="margin: 30px 0 20px;">What you'll learn</h3>
+
+            <div style="text-align: left;">
+                {% for topic in course.topics %}
+                    <p style="padding: 15px; border-bottom: 1px solid #263850;">
+                        <span style="color: #4ade80;">✓</span>
+                        {{ topic }}
+                    </p>
+                {% endfor %}
+            </div>
+
+            <br>
+            <a href="/" class="primary-button">← Back to Home</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 DevOps Academy. Learn. Build. Deploy.</p>
+    </footer>
+
+</body>
+</html>
